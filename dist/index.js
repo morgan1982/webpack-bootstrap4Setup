@@ -15,9 +15,7 @@ const App = () => {
                 <li>Bootstrap 4</li>
                 <li>Font Aweasome</li>
             </ul>
-            <div class="btn btn-primary">hello</div>
         </div>
-
 
     )
 }

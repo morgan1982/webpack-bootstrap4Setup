@@ -1,13 +1,14 @@
 const webpack =  require('webpack');
 const path = require('path');
 const TransferWebpackPlugin = require('transfer-webpack-plugin');
-const ExtractTextPlugin = require('extract-text-plugin');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const autoprefixer = require('autoprefixer');
 const precss = require('precss');
 
 
-cosnt config = {
-    devtool: 'eval'
+const config = {
+    devtool: 'eval',
     entry: [
         'webpack/hot/only-dev-server',
         'tether',
@@ -18,15 +19,31 @@ cosnt config = {
         path: path.resolve(__dirname, 'dist'),
         filename: 'bundle.js'
     },
+    devServer: {
+        contentBase: path.join(__dirname, "dist"), // Relative directory for base of server-- location of the bundle
+        publicPath: '/',
+        inline: true,
+        port: process.env.PORT || 3000, // Port Number
+        host: '127.0.0.1', // Change to '0.0.0.0' for external facing server
+        historyApiFallback: true,
+    },
     plugins: [
-        new webpack.HotModuleReplacementPlugin()
-        new ExtractTextPlugin('./src/main.css'),
-        new TransferWebpackPlugin([
-                {
-                    from: 'src',
-                }
-            ])
-         ],
+        // new webpack.optimize.ModuleConcatenationPlugin(),
+        // minify the bundle
+        // new HtmlWebpackPlugin({
+        //     template: path.join(__dirname, 'index.js'),
+        //     path: buildPath,
+        //     excludeChunks: ['base'],
+        //     filename: 'index.html',
+        //     minify: {
+        //         collapseWhitespace: true,
+        //         collapseInlineTagWhitespace: true,
+        //         removeComments: true,
+        //         removeRedundantAttributes: true
+        //     }
+        // }),
+        new webpack.HotModuleReplacementPlugin(),
+
         new webpack.ProvidePlugin({
 
                   $: 'jquery',
@@ -50,9 +67,32 @@ cosnt config = {
                   Util: 'exports-loader?Util!bootstrap/js/dist/util'
 
         }),
+        new ExtractTextPlugin('./src/main.css'),
+        new TransferWebpackPlugin([
+            {
+                from: 'src',
+            }
+        ])
+     ],
 
     module: {
         rules: [
+            {
+                test: /\.jsx?$/,
+                exclude: /node_modules/,
+                use: [
+                    'react-hot-loader/webpack',
+                    'babel-loader'
+                ]
+            },
+            {
+                test: /\.js$/,
+                exclude: /node_modules/,
+                use: [
+                    'babel-loader',
+                    // 'eslint-loader'
+                ]
+            },
             {
                 test: /\.woff2?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
                 use: 'url-loader?limit=10000',
@@ -73,7 +113,7 @@ cosnt config = {
             },
             {
                 test: /\.(scss)$/,
-                use: ExtractTextPlugin.extract({
+                use: ['css-hot-loader'].concat(ExtractTextPlugin.extract({
                     fallback: 'style-loader',
                     use: [
                         {
@@ -96,7 +136,8 @@ cosnt config = {
                             loader: 'sass-loader' //compiles SASS to css
                         }
                     ]
-                })
+                }
+            ))
             },
             {
                 test: /bootstrap\/dist\/js\/umd\//,
@@ -112,8 +153,15 @@ cosnt config = {
                         loader: 'font-awesome-loader'
                     }
                 ]
+            },
+            {
+                test: /bootstrap\/dist\/js\/umd\//,
+                use: 'imports-loader?jQuery=jquery'
             }
         ]
+    },
+    resolve: {
+        extensions: ['*', '.js', '.jsx', '.css', '.scss'],
     }
 }
 
